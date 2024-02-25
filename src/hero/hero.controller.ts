@@ -1,46 +1,30 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
   Param,
   Post,
+  Put,
   Redirect,
   Req,
   Res,
 } from '@nestjs/common';
 import { CreateHero } from './dto/create-hero.dto';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { UpdateHero } from './dto/update-hero.dto';
+import { HeroService } from './hero.service';
 
-const heroes = [
-  {
-    id: 0,
-    name: 'Aurora',
-    gambar: 'ice.jpg',
-  },
-  {
-    id: 1,
-    name: 'Akai',
-    gambar: 'panda.jpg',
-  },
-  {
-    id: 2,
-    name: 'Johnson',
-    gambar: 'mobil.jpg',
-  },
-  {
-    id: 3,
-    name: 'Franco',
-    gambar: 'ndut.jpg',
-  },
-];
 @Controller('hero')
 export class HeroController {
+  constructor(private heroService: HeroService) {}
   @Get('/')
   @HttpCode(200)
   @Header('Content-Type', 'application/json')
   index(@Res() response) {
-    response.json(heroes);
+    response.json(this.heroService.findAll());
   }
 
   @Get('create')
@@ -58,7 +42,7 @@ export class HeroController {
       //   message: 'Created',
       //   content: heroes,
       // });
-      heroes.push(CreateHeroDto);
+      this.heroService.create(CreateHeroDto);
       response.status(201).json({
         message: 'Created',
         content: request.body,
@@ -72,11 +56,32 @@ export class HeroController {
 
   @Get('detail/:id')
   findOne(@Param('id') id: number) {
-    const hero = heroes.filter((hero) => {
+    const hero = this.heroService.findAll().filter((hero) => {
       return hero.id == id;
     });
 
-    return hero[0];
+    return hero;
+  }
+
+  @Put('update/:id')
+  update(@Param('id') id: number, @Body() UpdateHero: UpdateHero) {
+    this.heroService.findAll().filter((updateHero) => {
+      if (updateHero.id == id) {
+        updateHero.name = UpdateHero.name;
+        updateHero.gambar = UpdateHero.gambar;
+      }
+    });
+
+    return this.heroService.findAll();
+  }
+
+  @Delete('delete/:id')
+  destroy(@Param('id') id: number) {
+    const hero = this.heroService.findAll().filter((hero) => {
+      return hero.id != id;
+    });
+
+    return hero;
   }
 
   @Get('view')
